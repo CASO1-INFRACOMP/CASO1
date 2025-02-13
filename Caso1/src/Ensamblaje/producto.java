@@ -7,12 +7,17 @@ public class producto {
 	
 	
 	
-	public producto(int id, String estado) {
-		super();
+	public producto(int id, int estado) {
 		this.id = id;
 		this.estado = estado;
 	}
 	
+	
+	public int getId() { return id; }
+	
+	public String getEstado() { return estado; }
+	
+    public void setEstado(int estado) { this.estado = estado; }
 	
 
 }

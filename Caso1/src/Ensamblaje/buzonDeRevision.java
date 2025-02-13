@@ -7,14 +7,13 @@ public class buzonDeRevision {
 	
 	//n limitar la cantidad de productos que pueden ser
 	//almacenados en este buzón
-	private ArrayList buff;
+	private ArrayList buzonRevision;
 	private int limiteCantidadProductos;
 
 	
 	
 	public buzonDeRevision( int limiteCantidadProductos) {
-		super();
-		this.buff = new ArrayList();
+		this.buzonRevision = new ArrayList();
 		this.limiteCantidadProductos = limiteCantidadProductos;
 	}
 
@@ -23,26 +22,26 @@ public class buzonDeRevision {
 	//exlusion mutua
 	public synchronized void almacenar(producto i) {
 		
-		while (buff.size()==limiteCantidadProductos) {
+		while (buzonRevision.size()==limiteCantidadProductos) {
 			try {
 				wait();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
-		buff.add(i);
+		buzonRevision.add(i);
 		notify();	
 	}
 	
-	public synchronized Integer retirar() {
-		while (buff.size()==0) {
+	public synchronized producto retirar() {
+		while (buzonRevision.size()==0) {
 			try {
-				wait();
+				yield();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
-		producto i = (producto)buff.remove(0);
+		producto i = (producto)buzonRevision.remove(0);
 		notify();
 		return i;
 		

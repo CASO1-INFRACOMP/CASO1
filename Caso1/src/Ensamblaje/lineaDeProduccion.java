@@ -5,8 +5,6 @@ import java.util.Scanner;
 public class lineaDeProduccion {
 	
 	
-	
-	
 	public static void main(String[]args) {
 		
 		Scanner scanner = new Scanner(System.in);
@@ -31,14 +29,14 @@ public class lineaDeProduccion {
         // Crear operarios productores
         operario[] productores = new operario[numOperarios];
         for (int i = 0; i < numOperarios; i++) {
-            productores[i] = new operario(true, buzonDeReproceso, buzonDeRevision, deposito);
+            productores[i] = new operario(true, buzonDeReproceso, buzonDeRevision, deposito, numProductos);
             productores[i].start();
         }
 
         // Crear operarios del equipo de calidad
         operario[] equipoDeCalidad = new operario[numOperarios];
         for (int i = 0; i < numOperarios; i++) {
-            equipoDeCalidad[i] = new operario(false, buzonDeReproceso, buzonDeRevision, deposito);
+            equipoDeCalidad[i] = new operario(false, buzonDeReproceso, buzonDeRevision, deposito, numProductos);
             equipoDeCalidad[i].start();
         }
 
