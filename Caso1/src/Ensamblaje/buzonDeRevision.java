@@ -46,4 +46,9 @@ public class buzonDeRevision {
 		return i;
 		
 	}
+	
+	public ArrayList<buzonDeRevision> getRevision(){
+		
+		return buzonRevision;
+	}
 }
