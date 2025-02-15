@@ -18,7 +18,7 @@ public class buzonDeRevision {
 
 
 	//no se puede almacenar ni retirar productos al mismo tiempo
-	//exlusion mutua
+	//exlusion mutua - monitores
 	public synchronized void agregarProducto(producto i) {
         while (buzonRevision.size() == limiteCantidadProductos) {
             try {
@@ -31,7 +31,7 @@ public class buzonDeRevision {
         notifyAll();
     }
 	
-	public synchronized producto retirarProducto() {
+	public synchronized producto retirarProducto() { //diferente al metodo retirar del buzon de reproceso
         while (buzonRevision.isEmpty()) {
             try {
                 wait();
@@ -46,5 +46,10 @@ public class buzonDeRevision {
 	
 	public synchronized boolean estaLleno() {
         return buzonRevision.size() >= limiteCantidadProductos;
+    }
+
+
+    public synchronized boolean estaVacio() {
+        return buzonRevision.isEmpty();
     }
 }

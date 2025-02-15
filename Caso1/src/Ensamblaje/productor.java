@@ -8,6 +8,8 @@ public class productor extends Thread {
     // Llegan por parámetro desde el main
     private buzonDeReproceso buzonDeReproceso;
     private buzonDeRevision buzonDeRevision;
+
+    private static boolean finDetectado = false;
     
     // Constructor
     public productor(buzonDeReproceso buzonDeReproceso, buzonDeRevision buzonDeRevision) {
@@ -57,7 +59,9 @@ public class productor extends Thread {
                     Thread.currentThread().interrupt();
                 }
             }
-            
+            if (finDetectado) {
+                return;
+            }
             // Crear y almacenar un nuevo producto
             producto nuevo = new producto();
             buzonDeRevision.agregarProducto(nuevo);
@@ -68,14 +72,24 @@ public class productor extends Thread {
     
     @Override
     public void run() {
-        while (true) {
+        while (!finDetectado) {
+            synchronized (buzonDeRevision) {
+                while (buzonDeRevision.estaLleno()) {
+                    try {
+                        System.out.println("Productor en espera... espera pasiva");
+                        buzonDeRevision.wait();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+            }
+            
             // Si hay productos en reproceso, priorizarlos
-            if (!buzonDeReproceso.estaVacio()) {
+            if (hayProductosEnReproceso) {
                 reprocesar();
             } else {
                 generar();
             }
-            Thread.yield();
         }
     }
 }

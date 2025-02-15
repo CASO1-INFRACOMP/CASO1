@@ -35,5 +35,6 @@ public class lineaDeProduccion {
             equipoCalidad[i] = new equipoDeCalidad(buzonDeRevision, buzonDeReproceso, deposito, numProductos);
             equipoCalidad[i].start();
         }
+        scanner.close();
     }
 }
