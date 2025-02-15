@@ -1,43 +1,27 @@
 package Ensamblaje;
 
-//los operarios son los threads
-
+// Los operarios son los threads
 public class productor extends Thread {
-	
-	private double numRechazados = 0;
-	private double numPiso;
-	
-	//sirve para activar el señalamiento
-	private static boolean hayProductosEnReproceso = false;
-	
-	//existen operarios productores y operarios del equipo de calidad
-	// hay que discriminarlos a traves de un parametro
-	private boolean esProductor;
-	
-	
-	//llegan por parametro desde el main
-	private buzonDeReproceso buzonDeReproceso;
-	private buzonDeRevision buzonDeRevision;
-	private deposito deposito;
-	private static int id = 0;
-	private double numProductos;
-	
-	
-	
-	//constructor
-	public productor(buzonDeReproceso buzonDeReproceso, buzonDeRevision buzonDeRevision) {
+    
+    private static boolean hayProductosEnReproceso = false;
+    
+    // Llegan por parámetro desde el main
+    private buzonDeReproceso buzonDeReproceso;
+    private buzonDeRevision buzonDeRevision;
+    
+    // Constructor
+    public productor(buzonDeReproceso buzonDeReproceso, buzonDeRevision buzonDeRevision) {
         if (buzonDeReproceso == null || buzonDeRevision == null) {
             throw new IllegalArgumentException("Los buzones no pueden ser null");
         }
         this.buzonDeReproceso = buzonDeReproceso;
         this.buzonDeRevision = buzonDeRevision;
     }
-	
-	//señalamiento entre reprocesar y generar
-	public void reprocesar() {
+    
+    // Señalamiento entre reprocesar y generar
+    public void reprocesar() {
         synchronized (buzonDeReproceso) {
-			//tiene que estar vacio (mientras NO haya productos en reproceso)
-
+            // Esperar hasta que haya productos en el buzón de reproceso
             while (!hayProductosEnReproceso) {
                 try {
                     buzonDeReproceso.wait();
@@ -45,33 +29,48 @@ public class productor extends Thread {
                     Thread.currentThread().interrupt();
                 }
             }
+            
+            // Retirar producto del buzón de reproceso
             producto p = buzonDeReproceso.retirar();
+            
+            // Si el producto es FIN, el productor finaliza
+            if ("FIN".equals(p.getEstado())) {
+                System.out.println("Productor recibe producto FIN y finaliza ejecución.");
+                return;
+            }
+            
+            // Enviar producto reprocesado al buzón de revisión
             buzonDeRevision.agregarProducto(p);
+            System.out.println("Productor reprocesa producto: " + p.getId());
+            hayProductosEnReproceso = !buzonDeReproceso.estaVacio();
             buzonDeRevision.notifyAll();
         }
     }
 
-
-	
-	public void generar() {
+    public void generar() {
         synchronized (buzonDeRevision) {
-            while (hayProductosEnReproceso) {
+            // Esperar hasta que haya espacio en el buzón de revisión
+            while (hayProductosEnReproceso || buzonDeRevision.estaLleno()) {
                 try {
                     buzonDeRevision.wait();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
             }
-            producto p = new producto();
-            buzonDeRevision.agregarProducto(p);
+            
+            // Crear y almacenar un nuevo producto
+            producto nuevo = new producto();
+            buzonDeRevision.agregarProducto(nuevo);
+            System.out.println("Productor genera nuevo producto: " + nuevo.getId());
             buzonDeRevision.notifyAll();
         }
     }
-
-	@Override
+    
+    @Override
     public void run() {
         while (true) {
-            if (hayProductosEnReproceso) {
+            // Si hay productos en reproceso, priorizarlos
+            if (!buzonDeReproceso.estaVacio()) {
                 reprocesar();
             } else {
                 generar();
