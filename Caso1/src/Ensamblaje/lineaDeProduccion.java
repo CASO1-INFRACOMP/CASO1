@@ -20,7 +20,7 @@ public class lineaDeProduccion {
         deposito deposito = new deposito();
         
         for (int i = 0; i < numProductores; i++) {
-            new productor(buzonDeReproceso, buzonDeRevision).start();
+            new productor(buzonDeReproceso, buzonDeRevision).start(); //Los productores no conocen cuántos productos deben generar
             new equipoDeCalidad(buzonDeRevision, buzonDeReproceso, deposito, numProductos).start();
         }
         scanner.close();

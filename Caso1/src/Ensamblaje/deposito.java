@@ -1,5 +1,5 @@
 package Ensamblaje;
-
+//no tienen problemas con la cantidad de productos que lleguen desde la línea de producción.
 public class deposito {
     private int productosAprobados;
 
@@ -10,9 +10,9 @@ public class deposito {
     // Recibe productos aprobados
     public synchronized void recibirProducto() {
         productosAprobados++;
-        System.out.println("Producto aprobado recibido en el depósito. Total almacenados: " + productosAprobados);
+        System.out.println("[deposito] Producto aprobado recibido en el depósito. Total almacenados: " + productosAprobados + " [ESTADO: FINALIZADO]");
     }
-
+    
     // Retorna la cantidad de productos aprobados
     public synchronized int getCantidadProductos() {
         return productosAprobados;

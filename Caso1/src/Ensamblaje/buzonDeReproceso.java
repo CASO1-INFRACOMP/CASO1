@@ -11,39 +11,38 @@ public class buzonDeReproceso {
     }
 
     public synchronized void almacenar(producto i) {
-        long threadId = Thread.currentThread().getId();
-        System.out.println("[buzonDeReproceso-" + threadId + "] Recibiendo producto: " + i.getEstado());
-
+        System.out.println("[buzonDeReproceso] Recibiendo producto: " + i.getEstado());
+    
         if ("FIN".equals(i.getEstado())) {
             finRecibido = true;
-            System.out.println("[buzonDeReproceso-" + threadId + "] Producto FIN recibido. Notificando productores...");
+            System.out.println("[buzonDeReproceso] Producto FIN recibido. Notificando productores... [ESTADO: FINAL]");
         } else {
             buzonReproceso.add(i);
+            System.out.println("[buzonDeReproceso] Producto agregado a reproceso: " + i.getId() + " [ESTADO: RECHAZADO]");
         }
         notifyAll();
     }
-
+    
     public synchronized producto retirar() {
-        long threadId = Thread.currentThread().getId();
-        
         while (buzonReproceso.isEmpty() && !finRecibido) {
             try {
-                System.out.println("[buzonDeReproceso-" + threadId + "] Esperando productos...");
+                System.out.println("[buzonDeReproceso] Esperando productos...");
                 wait();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
         }
-
+    
         if (finRecibido) {
-            System.out.println("[buzonDeReproceso-" + threadId + "] Retornando NULL porque FIN ya fue entregado.");
+            System.out.println("[buzonDeReproceso] Retornando NULL porque FIN ya fue entregado.");
             return null;
         }
-
+    
         producto p = buzonReproceso.remove(0);
-        System.out.println("[buzonDeReproceso-" + threadId + "] Producto retirado: " + p.getId());
+        System.out.println("[buzonDeReproceso] Producto retirado: " + p.getId() + " [ESTADO: LISTO PARA REPROCESO]");
         return p;
     }
+    
 
     public synchronized boolean estaVacio() {
         return buzonReproceso.isEmpty();
