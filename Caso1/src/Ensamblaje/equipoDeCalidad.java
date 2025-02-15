@@ -8,9 +8,7 @@ public class equipoDeCalidad extends Thread {
     private deposito deposito;
     private int numProductos;
     private int productosProcesados = 0;
-    private int numRechazados = 0;
-    private int maxRechazados;
-    private static boolean finGenerado = false; // Hacer estático para compartir entre hilos
+    private static boolean finGenerado = false;
     private static final Random random = new Random();
 
     public equipoDeCalidad(buzonDeRevision buzonDeRevision, buzonDeReproceso buzonDeReproceso, deposito deposito, int numProductos) {
@@ -18,54 +16,59 @@ public class equipoDeCalidad extends Thread {
         this.buzonDeRevision = buzonDeRevision;
         this.deposito = deposito;
         this.numProductos = numProductos;
-        this.maxRechazados = (int) Math.floor(numProductos * 0.1); // función piso
     }
 
-    public synchronized boolean inspeccionar(producto p) {
-        System.out.println("Equipo de calidad verifica el producto: " + p.getId());
-        
-        int valorAleatorio = random.nextInt(100) + 1;
-        if (valorAleatorio % 7 == 0 && numRechazados < maxRechazados) { // múltiplo de 7
-            numRechazados++;
-            buzonDeReproceso.almacenar(p);
-            System.out.println("Producto " + p.getId() + " rechazado y enviado a buzón de reproceso.");
-            return false;
-        }
-        return true;
-    }
+    public void aprobar() {
+        long threadId = Thread.currentThread().getId();
+        System.out.println("[equipoDeCalidad-" + threadId + "] Intentando retirar producto...");
 
-    public synchronized void aprobar() {
         producto p = buzonDeRevision.retirarProducto();
-        if (inspeccionar(p)) {
+        System.out.println("[equipoDeCalidad-" + threadId + "] Revisando producto: " + p.getId());
+
+        if (random.nextInt(100) % 7 == 0) {
+            buzonDeReproceso.almacenar(p);
+            System.out.println("[equipoDeCalidad-" + threadId + "] Producto " + p.getId() + " rechazado. Enviado a buzón de reproceso.");
+        } else {
             deposito.recibirProducto();
-            System.out.println("Producto " + p.getId() + " aprobado y enviado a depósito.");
+            System.out.println("[equipoDeCalidad-" + threadId + "] Producto " + p.getId() + " aprobado y enviado a depósito.");
         }
+
         productosProcesados++;
+        System.out.println("[equipoDeCalidad-" + threadId + "] Productos procesados: " + productosProcesados + "/" + numProductos);
+
+        synchronized (buzonDeRevision) {
+            buzonDeRevision.notifyAll();
+        }
+
+        if (productosProcesados == numProductos && !finGenerado) {
+            System.out.println("[equipoDeCalidad-" + threadId + "] Generando producto FIN...");
+            producto fin = new producto(0, "FIN");
+            buzonDeReproceso.almacenar(fin);
+            finGenerado = true;
+        }
     }
 
     @Override
-public void run() {
-    while (productosProcesados < numProductos) {
-        synchronized (buzonDeRevision) {
-            while (buzonDeRevision.estaVacio()) {
+    public void run() {
+        long threadId = Thread.currentThread().getId();
+        System.out.println("[equipoDeCalidad-" + threadId + "] Iniciado.");
+
+        while (true) {
+            if (finGenerado && buzonDeRevision.estaVacio()) {
+                System.out.println("[equipoDeCalidad-" + threadId + "] Finalizando correctamente.");
+                break;
+            }
+
+            if (!buzonDeRevision.estaVacio()) {
+                aprobar();
+            } else {
                 try {
-                    System.out.println("Equipo de calidad en espera... espera pasiva");
-                    buzonDeRevision.wait();
+                    System.out.println("[equipoDeCalidad-" + threadId + "] Esperando productos...");
+                    Thread.sleep(50);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
             }
         }
-        aprobar();
     }
-
-    synchronized (equipoDeCalidad.class) {
-        if (!finGenerado) {
-            System.out.println("Generando producto FIN");
-            buzonDeReproceso.almacenar(new producto(0, "FIN"));
-            finGenerado = true;
-        }
-    }
-
-    System.out.println("Equipo de calidad finaliza ejecución.");
-}}
+}

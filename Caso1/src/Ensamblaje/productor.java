@@ -1,95 +1,58 @@
 package Ensamblaje;
 
-// Los operarios son los threads
 public class productor extends Thread {
-    
-    private static boolean hayProductosEnReproceso = false;
-    
-    // Llegan por parámetro desde el main
     private buzonDeReproceso buzonDeReproceso;
     private buzonDeRevision buzonDeRevision;
+    private static boolean hayProductosEnReproceso = false;
 
-    private static boolean finDetectado = false;
-    
-    // Constructor
     public productor(buzonDeReproceso buzonDeReproceso, buzonDeRevision buzonDeRevision) {
-        if (buzonDeReproceso == null || buzonDeRevision == null) {
-            throw new IllegalArgumentException("Los buzones no pueden ser null");
-        }
         this.buzonDeReproceso = buzonDeReproceso;
         this.buzonDeRevision = buzonDeRevision;
-    }
-    
-    // Señalamiento entre reprocesar y generar
-    public void reprocesar() {
-        synchronized (buzonDeReproceso) {
-            // Esperar hasta que haya productos en el buzón de reproceso
-            while (!hayProductosEnReproceso) {
-                try {
-                    buzonDeReproceso.wait();
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            }
-            
-            // Retirar producto del buzón de reproceso
-            producto p = buzonDeReproceso.retirar();
-            
-            // Si el producto es FIN, el productor finaliza
-            if ("FIN".equals(p.getEstado())) {
-                System.out.println("Productor recibe producto FIN y finaliza ejecución.");
-                return;
-            }
-            
-            // Enviar producto reprocesado al buzón de revisión
-            buzonDeRevision.agregarProducto(p);
-            System.out.println("Productor reprocesa producto: " + p.getId());
-            hayProductosEnReproceso = !buzonDeReproceso.estaVacio();
-            buzonDeRevision.notifyAll();
-        }
     }
 
     public void generar() {
         synchronized (buzonDeRevision) {
-            // Esperar hasta que haya espacio en el buzón de revisión
-            while (hayProductosEnReproceso || buzonDeRevision.estaLleno()) {
+            while (buzonDeRevision.estaLleno()) {
                 try {
+                    System.out.println("[productor-" + Thread.currentThread().getId() + "] Buzón de revisión lleno. Esperando...");
                     buzonDeRevision.wait();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
             }
-            if (finDetectado) {
+    
+            if (!buzonDeReproceso.seguirGenerando()) {
+                System.out.println("[productor-" + Thread.currentThread().getId() + "] FIN detectado en generación. Finalizando...");
                 return;
             }
-            // Crear y almacenar un nuevo producto
+    
             producto nuevo = new producto();
             buzonDeRevision.agregarProducto(nuevo);
-            System.out.println("Productor genera nuevo producto: " + nuevo.getId());
-            buzonDeRevision.notifyAll();
+            System.out.println("[productor-" + Thread.currentThread().getId() + "] Generó producto: " + nuevo.getId());
         }
     }
-    
+
     @Override
     public void run() {
-        while (!finDetectado) {
-            synchronized (buzonDeRevision) {
-                while (buzonDeRevision.estaLleno()) {
-                    try {
-                        System.out.println("Productor en espera... espera pasiva");
-                        buzonDeRevision.wait();
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    }
-                }
+        System.out.println("[productor-" + Thread.currentThread().getId() + "] Iniciado.");
+        while (true) {
+            if (!buzonDeReproceso.seguirGenerando()) {
+                System.out.println("[productor-" + Thread.currentThread().getId() + "] FIN detectado en run(). Finalizando...");
+                break;
             }
-            
-            // Si hay productos en reproceso, priorizarlos
+    
             if (hayProductosEnReproceso) {
-                reprocesar();
+                producto p = buzonDeReproceso.retirar();
+                if (p == null || "FIN".equals(p.getEstado())) {
+                    System.out.println("[productor-" + Thread.currentThread().getId() + "] Detectó FIN al retirar. Finalizando...");
+                    break;
+                }
+                buzonDeRevision.agregarProducto(p);
+                System.out.println("[productor-" + Thread.currentThread().getId() + "] Reprocesa producto: " + p.getId());
             } else {
                 generar();
             }
         }
+        System.out.println("[productor-" + Thread.currentThread().getId() + "] Finalizó correctamente.");
     }
 }

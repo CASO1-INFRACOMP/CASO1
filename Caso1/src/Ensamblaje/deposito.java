@@ -7,9 +7,14 @@ public class deposito {
         this.productosAprobados = 0;
     }
 
-    //recibe un producto a la vez
+    // Recibe productos aprobados
     public synchronized void recibirProducto() {
         productosAprobados++;
         System.out.println("Producto aprobado recibido en el depósito. Total almacenados: " + productosAprobados);
+    }
+
+    // Retorna la cantidad de productos aprobados
+    public synchronized int getCantidadProductos() {
+        return productosAprobados;
     }
 }
