@@ -2,6 +2,8 @@ package Ensamblaje;
 
 import java.util.ArrayList;
 
+
+//no tiene limite de capacidad
 public class buzonDeReproceso {
     private ArrayList<producto> buzonReproceso;
     private boolean finRecibido = false;

@@ -12,7 +12,7 @@ public class buzonDeRevision {
     }
 
     public synchronized void agregarProducto(producto i) {
-        while (buzonRevision.size() == limiteCantidadProductos) { //si no hay espacio disponible los
+        while (buzonRevision.size() >= limiteCantidadProductos) { //si no hay espacio disponible los
             //productores deben esperar hasta que puedan depositar el producto actual
             try {
                 System.out.println("[buzonDeRevision] Buzón lleno. Esperando espacio...");
@@ -27,17 +27,20 @@ public class buzonDeRevision {
     }
     
     public synchronized producto retirarProducto() {
-        while (buzonRevision.isEmpty()) {
+        while (buzonRevision.isEmpty()) { 
+            // Si no hay productos disponibles, los consumidores deben esperar
             try {
                 System.out.println("[buzonDeRevision] Esperando productos...");
-                wait();
+                wait(); // El hilo se bloquea hasta que otro hilo llame a notifyAll()
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                Thread.currentThread().interrupt(); // Restablecer el estado de interrupción
+                System.out.println("[buzonDeRevision] Hilo interrumpido al esperar productos.");
+                return null; // Retorna null para evitar problemas en la ejecución
             }
         }
         producto i = buzonRevision.remove(0);
         System.out.println("[buzonDeRevision] Producto retirado: " + i.getId() + " [ESTADO: EN INSPECCIÓN]");
-        notifyAll();
+        notifyAll(); // Notificar a los hilos en espera de un cambio en el buzón
         return i;
     }
     
