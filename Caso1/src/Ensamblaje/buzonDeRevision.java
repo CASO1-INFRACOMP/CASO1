@@ -4,7 +4,8 @@ import java.util.ArrayList;
 
 public class buzonDeRevision {
     private ArrayList<producto> buzonRevision;
-    private int limiteCantidadProductos;
+    private int limiteCantidadProductos; //decidieron limitar la cantidad de productos que pueden ser
+    //almacenados en este buzón.
 
     public buzonDeRevision(int limiteCantidadProductos) {
         this.buzonRevision = new ArrayList<>();

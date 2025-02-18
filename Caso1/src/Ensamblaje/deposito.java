@@ -8,6 +8,7 @@ public class deposito {
     }
 
     // Recibe productos aprobados
+    //Sin embargo, solamente pueden ir recibiendo de un producto a la vez cuando se aprueba un nuevo producto.
     public synchronized void recibirProducto() {
         productosAprobados++;
         System.out.println("[deposito] Producto aprobado recibido en el depósito. Total almacenados: " + productosAprobados + " [ESTADO: FINALIZADO]");

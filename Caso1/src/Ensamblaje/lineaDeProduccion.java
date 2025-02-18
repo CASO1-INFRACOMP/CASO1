@@ -9,7 +9,8 @@ public class lineaDeProduccion {
         System.out.print("Ingrese el tamaño del buzón de revisión: ");
         int tamanoBuzon = scanner.nextInt();
 
-        System.out.print("Ingrese el número de productores: ");
+        System.out.print("Ingrese el número de operarios: "); //Se cuenta con el mismo número de operarios en los productores y el equipo de calidad.
+        
         int numProductores = scanner.nextInt();
 
         System.out.print("Ingrese el número total de productos a producir: ");

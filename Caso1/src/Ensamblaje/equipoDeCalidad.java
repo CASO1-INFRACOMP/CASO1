@@ -32,15 +32,16 @@ public class equipoDeCalidad extends Thread {
         System.out.println("[equipoDeCalidad-" + getId() + "] Revisando producto: " + p.getId() + " [ESTADO: EN REVISIÓN]");
 
         if (random.nextInt(100) % 7 == 0) {
-            buzonDeReproceso.almacenar(p);
+            buzonDeReproceso.almacenar(p); //Si fueron rechazados, envían el producto al buzón de reproceso (este buzón no tiene
+            //ningún límite de capacidad).
             System.out.println("[equipoDeCalidad-" + getId() + "] Producto " + p.getId() + " rechazado y enviado a reproceso. [ESTADO: RECHAZADO]");
         } else {
-            deposito.recibirProducto();
+            deposito.recibirProducto(); //Si fueron aprobados, enviar el producto al depósito.
             System.out.println("[equipoDeCalidad-" + getId() + "] Producto " + p.getId() + " aprobado y enviado a depósito. [ESTADO: APROBADO]");
         }
 
         productosProcesados++;
-        System.out.println("[equipoDeCalidad-" + getId() + "] Productos procesados: " + productosProcesados + "/" + numProductos);
+        
 
         synchronized (buzonDeRevision) {
             buzonDeRevision.notifyAll();
